@@ -13,5 +13,4 @@ workflows:
         script: |
           dotnet restore Chaincase.Android/Chaincase.Android.csproj
           dotnet build Chaincase.Android/Chaincase.Android.csproj -c Release
-    artifacts:
-      - path: Chaincase.Android/bin/Release/*.apk
+    artifacts: Chaincase.Android/bin/Release/*.apk
