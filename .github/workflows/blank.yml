@@ -1,7 +1,7 @@
-name: Build APK from Google Drive ZIP (robust)
+name: Build APK from tomy.zip
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:  # لتشغيله يدويًا
   push:
     branches:
       - master
@@ -16,25 +16,54 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    # 2️⃣ Download ZIP from Google Drive (direct download)
-    - name: Download project ZIP
+    # 2️⃣ Unzip tomy.zip
+    - name: Unzip tomy.zip
       shell: powershell
       run: |
-        $fileId = "1cOb8jAIoAb1kmMzsHtkhl2wLyCL3P-vC"
-        $url = "https://drive.google.com/uc?export=download&id=$fileId"
-        $output = "project.zip"
-        Invoke-WebRequest -Uri $url -OutFile $output
-        Write-Host "Downloaded file size:" (Get-Item $output).Length
+        $zipPath = ".github/tomy.zip"
+        $dest = "extracted"
+        Expand-Archive -Path $zipPath -DestinationPath $dest -Force
+        Write-Host "ZIP extracted to $dest"
 
-    # 3️⃣ Inspect ZIP contents
-    - name: Inspect ZIP
+    # 3️⃣ Detect main project folder
+    - name: Detect project folder
       shell: powershell
       run: |
-        Add-Type -AssemblyName System.IO.Compression.FileSystem
-        $zip = [System.IO.Compression.ZipFile]::OpenRead("project.zip")
-        Write-Host "Contents of ZIP:"
-        $zip.Entries | ForEach-Object { Write-Host $_.FullName }
-        $zip.Dispose()
+        $folders = Get-ChildItem -Path extracted -Directory
+        if ($folders.Count -eq 0) {
+            Write-Host "No subfolders found, using 'extracted' as project folder"
+            $global:PROJECT_FOLDER = "extracted"
+        } else {
+            Write-Host "Folders found in extracted:"
+            $folders | ForEach-Object { Write-Host $_.Name }
+            $global:PROJECT_FOLDER = $folders[0].FullName
+        }
+        Write-Host "Using project folder: $global:PROJECT_FOLDER"
+
+    # 4️⃣ Setup .NET SDK
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '7.0.x'
+
+    # 5️⃣ Install Android workload
+    - name: Install Android Workload
+      run: dotnet workload install android
+
+    # 6️⃣ Restore & Build project
+    - name: Restore and Build
+      shell: powershell
+      run: |
+        cd $env:PROJECT_FOLDER
+        dotnet restore
+        dotnet build -c Release
+
+    # 7️⃣ Upload APK artifact
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: Chaincase-APK
+        path: $env:PROJECT_FOLDER\bin\Release\*.apk        $zip.Dispose()
 
     # 4️⃣ Unzip project
     - name: Unzip project
