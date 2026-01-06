@@ -1,17 +1,12 @@
-workflows:
-  build-apk:
-    name: Build APK
-    max_build_duration: 60
-    environment:
-      vars:
-        DOTNET_ROOT: /usr/share/dotnet
-    scripts:
-      - name: Install .NET workloads
-        script: |
-          dotnet workload install android
-      - name: Restore & Build
-        script: |
-          dotnet restore Chaincase.Android/Chaincase.Android.csproj
-          dotnet build Chaincase.Android/Chaincase.Android.csproj -c Release
-    artifacts:
-      - "Chaincase.Android/bin/Release/*.apk"
+scripts:
+  - name: Install .NET
+    script: |
+      curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 10.0
+      export PATH=$HOME/.dotnet:$PATH
+  - name: Install .NET workloads
+    script: |
+      dotnet workload install android
+  - name: Restore & Build
+    script: |
+      dotnet restore Chaincase.Android/Chaincase.Android.csproj
+      dotnet build Chaincase.Android/Chaincase.Android.csproj -c Release
