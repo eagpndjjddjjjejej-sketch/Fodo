@@ -1,0 +1,45 @@
+name: Build APK from ZIP
+
+on:
+  push:
+    branches:
+      - master
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    # 1. Checkout code
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    # 2. تثبيت .NET و Android workloads
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '7.0.x'
+
+    - name: Install Android Workload
+      run: dotnet workload install android
+
+    # 3. فك ZIP المشروع
+    - name: Unzip project
+      run: |
+        mkdir extracted
+        tar -xf tomy.zip -C extracted || unzip tomy.zip -d extracted
+
+    # 4. استعادة الحزم وبناء المشروع
+    - name: Restore and Build
+      run: |
+        cd extracted/Chaincase.Android
+        dotnet restore
+        dotnet build -c Release
+
+    # 5. رفع APK كـ artifact
+    - name: Upload APK
+      uses: actions/upload-artifact@v3
+      with:
+        name: Chaincase-APK
+        path: extracted/Chaincase.Android/bin/Release/*.apk
