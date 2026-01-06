@@ -1,6 +1,7 @@
-name: Build APK from ZIP
+name: Build APK from Google Drive ZIP
 
 on:
+  workflow_dispatch:  # لتشغيله يدويًا
   push:
     branches:
       - master
@@ -11,48 +12,39 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    # 1. Checkout repository
+    # 1️⃣ Checkout
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    # 2. Setup .NET SDK
+    # 2️⃣ تحميل ZIP من Google Drive
+    - name: Download project ZIP
+      run: |
+        wget --no-check-certificate "https://drive.google.com/uc?export=download&id=1cOb8jAIoAb1kmMzsHtkhl2wLyCL3P-vC" -O project.zip
+
+    # 3️⃣ فك ZIP
+    - name: Unzip project
+      run: unzip project.zip -d extracted
+
+    # 4️⃣ تثبيت .NET SDK
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: '7.0.x'
 
-    # 3. Install Xamarin Android workload
+    # 5️⃣ تثبيت Android Workload
     - name: Install Android Workload
       run: dotnet workload install android
 
-    # 4. Create extraction folder and unzip the project
-    - name: Unzip project
-      run: |
-        mkdir extracted
-        unzip tomy.zip -d extracted
-
-    # 5. Restore NuGet packages and build the Android project
+    # 6️⃣ Build المشروع
     - name: Restore and Build
       run: |
         cd extracted/Chaincase.Android
         dotnet restore
         dotnet build -c Release
 
-    # 6. Upload APK as artifact
+    # 7️⃣ رفع APK كـ artifact
     - name: Upload APK
       uses: actions/upload-artifact@v4
-      with:
-        name: Chaincase-APK
-        path: extracted/Chaincase.Android/bin/Release/*.apk        cd extracted/Chaincase.Android
-        dotnet restore
-        dotnet build -c Release
-
-    # 6. Upload APK as artifact
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: Chaincase-APK
-        path: extracted/Chaincase.Android/bin/Release/*.apk      uses: actions/upload-artifact@v4
       with:
         name: Chaincase-APK
         path: extracted/Chaincase.Android/bin/Release/*.apk
