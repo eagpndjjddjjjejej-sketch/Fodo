@@ -43,6 +43,15 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: Chaincase-APK
+        path: extracted/Chaincase.Android/bin/Release/*.apk        cd extracted/Chaincase.Android
+        dotnet restore
+        dotnet build -c Release
+
+    # 6. Upload APK as artifact
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: Chaincase-APK
         path: extracted/Chaincase.Android/bin/Release/*.apk      uses: actions/upload-artifact@v4
       with:
         name: Chaincase-APK
