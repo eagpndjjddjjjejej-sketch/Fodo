@@ -1,7 +1,7 @@
 name: Build APK from Google Drive ZIP
 
 on:
-  workflow_dispatch:  # لتشغيله يدويًا
+  workflow_dispatch:
   push:
     branches:
       - master
@@ -12,37 +12,39 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    # 1️⃣ Checkout
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    # 2️⃣ تحميل ZIP من Google Drive
+    # تحميل ZIP باستخدام PowerShell
     - name: Download project ZIP
+      shell: powershell
       run: |
-        wget --no-check-certificate "https://drive.google.com/uc?export=download&id=1cOb8jAIoAb1kmMzsHtkhl2wLyCL3P-vC" -O project.zip
+        $url = "https://drive.google.com/uc?export=download&id=1cOb8jAIoAb1kmMzsHtkhl2wLyCL3P-vC"
+        $output = "project.zip"
+        Invoke-WebRequest -Uri $url -OutFile $output
 
-    # 3️⃣ فك ZIP
+    # فك ZIP
     - name: Unzip project
-      run: unzip project.zip -d extracted
+      run: powershell -command "Expand-Archive -Path project.zip -DestinationPath extracted -Force"
 
-    # 4️⃣ تثبيت .NET SDK
+    # إعداد .NET SDK
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: '7.0.x'
 
-    # 5️⃣ تثبيت Android Workload
+    # تثبيت Android Workload
     - name: Install Android Workload
       run: dotnet workload install android
 
-    # 6️⃣ Build المشروع
+    # بناء المشروع
     - name: Restore and Build
       run: |
         cd extracted/Chaincase.Android
         dotnet restore
         dotnet build -c Release
 
-    # 7️⃣ رفع APK كـ artifact
+    # رفع APK
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
