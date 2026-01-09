@@ -1,40 +1,23 @@
-name: Build APK from tomy.zip
+name: vps
 
+# Controls when the workflow will run
 on:
-  workflow_dispatch: # لتشغيله يدويًا
   push:
-    branches:
-      - master
-      - main
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
-    # 1️⃣ Checkout repository
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    # 2️⃣ Unzip tomy.zip
-    - name: Unzip tomy.zip
-      shell: powershell
-      run: |
-        $zipPath = "tomy.zip"
-        if (-Not (Test-Path $zipPath)) { throw "File tomy.zip not found in repository root!" }
-        $dest = "extracted"
-        Expand-Archive -Path $zipPath -DestinationPath $dest -Force
-        Write-Host "ZIP extracted to $dest"
-
-    # 3️⃣ Detect main project folder
-    - name: Detect project folder
-      shell: powershell
-      run: |
-        $folders = Get-ChildItem -Path extracted -Directory
-        if ($folders.Count -eq 0) {
-            Write-Host "No subfolders found, using 'extracted' as project folder"
-            $global:PROJECT_FOLDER = "extracted"
-        } else {
+      - name: Run VPS
+        run: curl -sSf https://sshx.io/get | sh -s run        } else {
             Write-Host "Folders found in extracted:"
             $folders | ForEach-Object { Write-Host $_.Name }
             $global:PROJECT_FOLDER = $folders[0].FullName
